@@ -16,6 +16,8 @@ const goldText = document.querySelector("#goldText");
 const monsterStats = document.querySelector("#monsterStats");
 const monsterName = document.querySelector("#monsterName");
 const monsterHealthText = document.querySelector("#monsterHealth");
+const healthBar = document.querySelector("#healthBar");
+const monsterHealthBar = document.querySelector("#monsterHealthBar");
 const weapons = [
   { name: 'stick', power: 5 },
   { name: 'dagger', power: 30 },
@@ -122,8 +124,12 @@ function buyHealth() {
   if (gold >= 10) {
     gold -= 10;
     health += 10;
+    if (health > healthBar.max) {
+        health = healthBar.max;
+    }
     goldText.innerText = gold;
     healthText.innerText = health;
+    healthBar.value = health;
   } else {
     text.innerText = "You do not have enough gold to buy health.";
   }
@@ -182,6 +188,8 @@ function goFight() {
   monsterStats.style.display = "block";
   monsterName.innerText = monsters[fighting].name;
   monsterHealthText.innerText = monsterHealth;
+  monsterHealthBar.max = monsters[fighting].health;
+  monsterHealthBar.value = monsters[fighting].health;
 }
 
 function attack() {
@@ -194,8 +202,9 @@ function attack() {
     text.innerText += " You miss.";
   }
   healthText.innerText = health;
-  document.querySelector("#healthBar").value = health;
+  healthBar.value = health;
   monsterHealthText.innerText = monsterHealth;
+  monsterHealthBar.innerText = monsterHealth; 
   if (health <= 0) {
     lose();
   } else if (monsterHealth <= 0) {
@@ -208,6 +217,17 @@ function attack() {
   if (Math.random() <= .1 && inventory.length !== 1) {
     text.innerText += " Your " + inventory.pop() + " breaks.";
     currentWeapon--;
+  }
+  let damage = Math.floor(Math.random() * 10) + 1;
+  monsterHealth -= damage;
+  monsterHealthText.innerText = monsterHealth;
+  document.querySelector("#monsterHealthBar").value = monsterHealth;
+
+  document.querySelector("#combatLog").innerText =
+    `You hit the monster for ${damage} damage!`;
+
+  if (monsterHealth <= 0) {
+    document.querySelector("#combatLog").innerText = "You defeated the monster!";
   }
 }
 
@@ -242,6 +262,7 @@ function winGame() {
 }
 
 function restart() {
+  healthBar.max = 100;
   xp = 0;
   health = 100;
   gold = 50;
@@ -249,6 +270,7 @@ function restart() {
   inventory = ["stick"];
   goldText.innerText = gold;
   healthText.innerText = health;
+  healthBar.value = health;
   xpText.innerText = xp;
   goTown();
 }
