@@ -1,4 +1,214 @@
 body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0a0a23, #1a1a3a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+#game {
+  max-width: 600px;
+  width: 100%;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 15px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  color: #333;
+}
+
+#text {
+  background: linear-gradient(135deg, #0a0a23, #1a1a3a);
+  color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  min-height: 80px;
+  font-size: 16px;
+  line-height: 1.5;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+#stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+}
+
+.stat {
+  text-align: center;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6c757d;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #0a0a23;
+}
+
+progress {
+  width: 100%;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 5px;
+  border: none;
+}
+
+progress::-webkit-progress-bar {
+  background: #e9ecef;
+  border-radius: 10px;
+}
+
+progress::-webkit-progress-value {
+  background: linear-gradient(90deg, #28a745, #20c997);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+#monsterHealthBar::-webkit-progress-value {
+  background: linear-gradient(90deg, #dc3545, #e74c3c);
+}
+
+#monsterStats {
+  display: none;
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+#monsterStats h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  text-transform: capitalize;
+}
+
+#controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+button {
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background: linear-gradient(145deg, #feac32, #ffac33);
+  color: #0a0a23;
+  box-shadow: 0 4px 15px rgba(254, 172, 50, 0.4);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(254, 172, 50, 0.6);
+  background: linear-gradient(145deg, #ffac33, #feac32);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(254, 172, 50, 0.4);
+}
+
+#combatLog {
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  height: 120px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.damage-number {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.heal-number {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.miss-text {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.game-title {
+  text-align: center;
+  color: #0a0a23;
+  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 600px) {
+  #stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  #controls {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  button {
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+body {
   font-family: Arial, sans-serif;
   background-color: #0a0a23;
   display: flex;
@@ -79,7 +289,7 @@ progress::-webkit-progress-value {
 }
 
 #monsterHealthBar::-webkit-progress-value {
-  background: #e74c3c; /* red for monster */
+  background: #e74c3c;
 }
 
 .stat {
@@ -93,3 +303,4 @@ button {
   background-image: linear-gradient(#fecc4c, #ffac33);
   border: 3px solid #feac32;
 }
+*/

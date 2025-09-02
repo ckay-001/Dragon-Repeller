@@ -1,4 +1,367 @@
-let xp = 0;
+// Game Data
+const weapons = [
+  { name: 'stick', power: 5 },
+  { name: 'dagger', power: 30 },
+  { name: 'claw hammer', power: 50 },
+  { name: 'sword', power: 100 }
+];
+
+const monsters = [
+  { name: "slime", level: 2, health: 15 },
+  { name: "fanged beast", level: 8, health: 60 },
+  { name: "dragon", level: 20, health: 300 }
+];
+
+const locations = [
+  {
+    name: "town square",
+    buttonText: ["Go to store", "Go to cave", "Fight dragon"],
+    buttonFunctions: [goStore, goCave, fightDragon],
+    text: "You are in the town square. You see a sign that says 'Store'. A dark cave looms in the distance, and you sense a powerful dragon nearby."
+  },
+  {
+    name: "store",
+    buttonText: ["Buy 10 health (10 gold)", "Buy weapon (30 gold)", "Go to town square"],
+    buttonFunctions: [buyHealth, buyWeapon, goTown],
+    text: "You enter the store. The shopkeeper greets you with a friendly smile."
+  },
+  {
+    name: "cave",
+    buttonText: ["Fight slime", "Fight fanged beast", "Go to town square"],
+    buttonFunctions: [fightSlime, fightBeast, goTown],
+    text: "You enter the dark cave. Water drips from the ceiling and you hear strange noises echoing from the depths."
+  },
+  {
+    name: "fight",
+    buttonText: ["Attack", "Dodge", "Run"],
+    buttonFunctions: [attack, dodge, goTown],
+    text: "You are fighting a monster! Choose your action carefully."
+  },
+  {
+    name: "kill monster",
+    buttonText: ["Go to town square", "Go to town square", "Go to town square"],
+    buttonFunctions: [goTown, goTown, goTown],
+    text: 'The monster screams "Arg!" as it dies. You gain experience points and find gold!'
+  },
+  {
+    name: "lose",
+    buttonText: ["REPLAY?", "REPLAY?", "REPLAY?"],
+    buttonFunctions: [restart, restart, restart],
+    text: "You die. ☠️ Your adventure ends here, but you can try again!"
+  },
+  {
+    name: "win",
+    buttonText: ["REPLAY?", "REPLAY?", "REPLAY?"],
+    buttonFunctions: [restart, restart, restart],
+    text: "You defeat the dragon! YOU WIN THE GAME! 🎉 You are now a legendary hero!"
+  },
+  {
+    name: "easter egg",
+    buttonText: ["Pick 2", "Pick 8", "Go to town square"],
+    buttonFunctions: [pickTwo, pickEight, goTown],
+    text: "You find a mysterious fortune teller! Pick a number and test your luck. Ten numbers will be randomly chosen between 0 and 10. If your number matches, you win gold!"
+  }
+];
+
+// Utility Functions
+function updateUI() {
+  elements.xpText.innerText = gameState.xp;
+  elements.healthText.innerText = gameState.health;
+  elements.goldText.innerText = gameState.gold;
+  elements.healthBar.value = gameState.health;
+  elements.healthBar.max = gameState.maxHealth;
+}
+
+function logCombat(message, type = 'normal') {
+  const log = elements.combatLog;
+  const logEntry = document.createElement('div');
+
+  switch (type) {
+    case 'damage':
+      logEntry.className = 'damage-number';
+      break;
+    case 'heal':
+      logEntry.className = 'heal-number';
+      break;
+    case 'miss':
+      logEntry.className = 'miss-text';
+      break;
+  }
+
+  logEntry.textContent = message;
+  log.appendChild(logEntry);
+  log.scrollTop = log.scrollHeight;
+}
+
+function clearCombatLog() {
+  elements.combatLog.innerHTML = '';
+}
+
+// Core Game Functions
+function update(location) {
+  elements.monsterStats.style.display = "none";
+  clearCombatLog();
+
+  elements.button1.innerText = location.buttonText[0];
+  elements.button2.innerText = location.buttonText[1];
+  elements.button3.innerText = location.buttonText[2];
+
+  elements.button1.onclick = location.buttonFunctions[0];
+  elements.button2.onclick = location.buttonFunctions[1];
+  elements.button3.onclick = location.buttonFunctions[2];
+
+  elements.text.innerHTML = location.text;
+  updateUI();
+}
+
+// Location Functions
+function goTown() {
+  update(locations[0]);
+}
+
+function goStore() {
+  update(locations[1]);
+}
+
+function goCave() {
+  update(locations[2]);
+}
+
+// Store Functions
+function buyHealth() {
+  if (gameState.gold >= 10) {
+    gameState.gold -= 10;
+    const healAmount = Math.min(10, gameState.maxHealth - gameState.health);
+    gameState.health += healAmount;
+    updateUI();
+    elements.text.innerText = `You drink a health potion and restore ${healAmount} health points.`;
+  } else {
+    elements.text.innerText = "You do not have enough gold to buy health.";
+  }
+}
+
+function buyWeapon() {
+  if (gameState.currentWeapon < weapons.length - 1) {
+    if (gameState.gold >= 30) {
+      gameState.gold -= 30;
+      gameState.currentWeapon++;
+      const newWeapon = weapons[gameState.currentWeapon].name;
+      gameState.inventory.push(newWeapon);
+      updateUI();
+      elements.text.innerText = `You now have a ${newWeapon}! In your inventory you have: ${gameState.inventory.join(', ')}`;
+    } else {
+      elements.text.innerText = "You do not have enough gold to buy a weapon.";
+    }
+  } else {
+    elements.text.innerText = "You already have the most powerful weapon!";
+    elements.button2.innerText = "Sell weapon for 15 gold";
+    elements.button2.onclick = sellWeapon;
+  }
+}
+
+function sellWeapon() {
+  if (gameState.inventory.length > 1) {
+    gameState.gold += 15;
+    const soldWeapon = gameState.inventory.pop(); // Remove the last (current) weapon
+    gameState.currentWeapon--;
+    updateUI();
+    elements.text.innerText = `You sold a ${soldWeapon}. In your inventory you have: ${gameState.inventory.join(', ')}`;
+  } else {
+    elements.text.innerText = "Don't sell your only weapon!";
+  }
+}
+
+// Combat Functions
+function fightSlime() {
+  gameState.fighting = 0;
+  goFight();
+}
+
+function fightBeast() {
+  gameState.fighting = 1;
+  goFight();
+}
+
+function fightDragon() {
+  gameState.fighting = 2;
+  goFight();
+}
+
+function goFight() {
+  update(locations[3]);
+  const monster = monsters[gameState.fighting];
+  gameState.monsterHealth = monster.health;
+
+  elements.monsterStats.style.display = "block";
+  elements.monsterName.innerText = monster.name;
+  elements.monsterHealthText.innerText = gameState.monsterHealth;
+  elements.monsterHealthBar.max = monster.health;
+  elements.monsterHealthBar.value = monster.health;
+
+  logCombat(`A wild ${monster.name} appears!`);
+}
+
+function attack() {
+  const monster = monsters[gameState.fighting];
+  const weapon = weapons[gameState.currentWeapon];
+
+  // Monster attacks first
+  const monsterDamage = getMonsterAttackValue(monster.level);
+  gameState.health -= monsterDamage;
+
+  if (monsterDamage > 0) {
+    logCombat(`The ${monster.name} attacks you for ${monsterDamage} damage!`, 'damage');
+  } else {
+    logCombat(`The ${monster.name} misses its attack!`, 'miss');
+  }
+
+  // Player attacks
+  if (isMonsterHit()) {
+    const playerDamage = weapon.power + Math.floor(Math.random() * gameState.xp) + 1;
+    gameState.monsterHealth -= playerDamage;
+    logCombat(`You attack with your ${weapon.name} for ${playerDamage} damage!`);
+
+    // Weapon breaking chance
+    if (Math.random() <= 0.1 && gameState.inventory.length > 1) {
+      const brokenWeapon = gameState.inventory.pop();
+      gameState.currentWeapon--;
+      logCombat(`Your ${brokenWeapon} breaks!`, 'damage');
+    }
+  } else {
+    logCombat("You miss your attack!", 'miss');
+  }
+
+  // Update UI
+  updateUI();
+  elements.monsterHealthText.innerText = Math.max(0, gameState.monsterHealth);
+  elements.monsterHealthBar.value = Math.max(0, gameState.monsterHealth);
+
+  // Check battle results
+  if (gameState.health <= 0) {
+    lose();
+  } else if (gameState.monsterHealth <= 0) {
+    if (gameState.fighting === 2) {
+      winGame();
+    } else {
+      defeatMonster();
+    }
+  }
+}
+
+function getMonsterAttackValue(level) {
+  const baseAttack = level * 5;
+  const xpReduction = Math.floor(Math.random() * gameState.xp);
+  return Math.max(0, baseAttack - xpReduction);
+}
+
+function isMonsterHit() {
+  // 80% hit chance, or guaranteed hit if health is low
+  return Math.random() > 0.2 || gameState.health < 20;
+}
+
+function dodge() {
+  const monster = monsters[gameState.fighting];
+  if (Math.random() > 0.5) {
+    elements.text.innerText = `You successfully dodge the attack from the ${monster.name}!`;
+    logCombat("You dodge successfully!", 'heal');
+  } else {
+    const damage = Math.floor(getMonsterAttackValue(monster.level) * 0.5);
+    gameState.health -= damage;
+    elements.text.innerText = `You partially dodge, but still take ${damage} damage!`;
+    logCombat(`You take ${damage} damage while dodging!`, 'damage');
+    updateUI();
+
+    if (gameState.health <= 0) {
+      lose();
+    }
+  }
+}
+
+function defeatMonster() {
+  const monster = monsters[gameState.fighting];
+  const goldReward = Math.floor(monster.level * 6.7);
+  const xpReward = monster.level;
+
+  gameState.gold += goldReward;
+  gameState.xp += xpReward;
+
+  logCombat(`Victory! You gained ${xpReward} XP and found ${goldReward} gold!`, 'heal');
+  update(locations[4]);
+}
+
+function lose() {
+  update(locations[5]);
+}
+
+function winGame() {
+  update(locations[6]);
+}
+
+function restart() {
+  gameState = {
+    xp: 0,
+    health: 100,
+    maxHealth: 100,
+    gold: 50,
+    currentWeapon: 0,
+    fighting: null,
+    monsterHealth: 0,
+    inventory: ["stick"]
+  };
+
+  elements.healthBar.max = 100;
+  updateUI();
+  goTown();
+}
+
+// Easter Egg Functions
+function easterEgg() {
+  update(locations[7]);
+}
+
+function pickTwo() {
+  pick(2);
+}
+
+function pickEight() {
+  pick(8);
+}
+
+function pick(guess) {
+  const numbers = [];
+  while (numbers.length < 10) {
+    numbers.push(Math.floor(Math.random() * 11));
+  }
+
+  elements.text.innerHTML = `You picked ${guess}. Here are the random numbers:<br>${numbers.join(', ')}`;
+
+  if (numbers.includes(guess)) {
+    elements.text.innerHTML += "<br><br>🎉 Right! You win 20 gold!";
+    gameState.gold += 20;
+    updateUI();
+  } else {
+    elements.text.innerHTML += "<br><br>💀 Wrong! You lose 10 health!";
+    gameState.health -= 10;
+    updateUI();
+
+    if (gameState.health <= 0) {
+      lose();
+    }
+  }
+}
+
+// Initialize the game
+function initGame() {
+  updateUI();
+  goTown();
+}
+
+// Start the game
+initGame();
+
+
+//My code before
+/*let xp = 0;
 let health = 100;
 let gold = 50;
 let currentWeapon = 0;
@@ -305,4 +668,4 @@ function pick(guess) {
       lose();
     }
   }
-}
+}*/
