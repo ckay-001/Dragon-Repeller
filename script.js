@@ -1,4 +1,32 @@
 // Game Data
+const elements = {
+  button1: document.querySelector('#button1'),
+  button2: document.querySelector("#button2"),
+  button3: document.querySelector("#button3"),
+  text: document.querySelector("#text"),
+  xpText: document.querySelector("#xpText"),
+  healthText: document.querySelector("#healthText"),
+  goldText: document.querySelector("#goldText"),
+  monsterStats: document.querySelector("#monsterStats"),
+  monsterName: document.querySelector("#monsterName"),
+  monsterHealthText: document.querySelector("#monsterHealthText"),
+  healthBar: document.querySelector("#healthBar"),
+  monsterHealthBar: document.querySelector("#monsterHealthBar"),
+  combatLog: document.querySelector("#combatLog")
+};
+
+// Game State
+let gameState = {
+  xp: 0,
+  health: 100,
+  maxHealth: 100,
+  gold: 50,
+  currentWeapon: 0,
+  fighting: null,
+  monsterHealth: 0,
+  inventory: ["stick"]
+};
+
 const weapons = [
   { name: 'stick', power: 5 },
   { name: 'dagger', power: 30 },
