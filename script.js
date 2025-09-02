@@ -123,10 +123,7 @@ function goCave() {
 function buyHealth() {
   if (gold >= 10) {
     gold -= 10;
-    health += 10;
-    if (health > healthBar.max) {
-        health = healthBar.max;
-    }
+    health = Math.min(health + 10, healthBar.max);
     goldText.innerText = gold;
     healthText.innerText = health;
     healthBar.value = health;
