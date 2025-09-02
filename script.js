@@ -194,6 +194,7 @@ function attack() {
     text.innerText += " You miss.";
   }
   healthText.innerText = health;
+  document.querySelector("#healthBar").value = health;
   monsterHealthText.innerText = monsterHealth;
   if (health <= 0) {
     lose();

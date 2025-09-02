@@ -1,5 +1,10 @@
 body {
   background-color: #0a0a23;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
 }
 
 #text {
@@ -26,10 +31,11 @@ body {
 
 #monsterStats {
   display: none;
-  border: 1px solid #0a0a23;
-  padding: 5px;
-  color: #ffffff;
-  background-color: #c70d0d;
+  border: 2px solid #ff4d4d;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  background-color: #660000;
 }
 
 .stat {
