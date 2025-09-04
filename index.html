@@ -1,49 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width initial-scale=1.0" />
-    <link rel="stylesheet" href="./styles.css" />
-    <title>RPG Adventure Game</title>
-  </head>
-  <body>
-    <div id="game">
-      <h1 class="game-title">🗡️ RPG Adventure 🏰</h1>
 
-      <div id="stats">
-        <div class="stat">
-          <div class="stat-label">XP</div>
-          <div class="stat-value" id="xpText">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Health</div>
-          <div class="stat-value" id="healthText">100</div>
-          <progress id="healthBar" max="100" value="100"></progress>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Gold</div>
-          <div class="stat-value" id="goldText">50</div>
-        </div>
-      </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width initial-scale=1.0" />
+  <link rel="stylesheet" href="./styles.css" />
+  <title>RPG Adventure Game</title>
+</head>
 
-      <div id="monsterStats">
-        <h3 id="monsterName"></h3>
-        <div>Health: <span id="monsterHealthText"></span></div>
-        <progress id="monsterHealthBar" max="100" value="100"></progress>
-      </div>
-
-      <div id="text">
-        Welcome to the RPG Adventure! Choose your path wisely.
-      </div>
-
-      <div id="controls">
-        <button id="button1">Go to store</button>
-        <button id="button2">Go to cave</button>
-        <button id="button3">Fight dragon</button>
-      </div>
-
-      <div id="combatLog"></div>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚔️ Enhanced RPG Adventure 🏰</h1>
+      <div>Level <span id="levelText">1</span> Adventurer</div>
     </div>
-    <script src="./script.js"></script>
-  </body>
+
+    <div class="save-load">
+      <button class="btn" onclick="saveGame()">💾 Save</button>
+      <button class="btn" onclick="loadGame()">📁 Load</button>
+      <button class="btn" onclick="resetProgress()">🔄 Reset</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Level</div>
+        <div class="stat-value" id="levelDisplay">1</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">XP</div>
+        <div class="stat-value">
+          <span id="xpText">0</span>/<span id="xpNeeded">100</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill xp-bar" id="xpBar" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Health</div>
+        <div class="stat-value">
+          <span id="healthText">100</span>/<span id="maxHealthText">100</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill health-bar" id="healthBar" style="width: 100%"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mana</div>
+        <div class="stat-value">
+          <span id="manaText">50</span>/<span id="maxManaText">50</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill mana-bar" id="manaBar" style="width: 100%"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Gold</div>
+        <div class="stat-value" id="goldText">50</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Weapon</div>
+        <div class="stat-value" id="weaponText">Stick</div>
+      </div>
+    </div>
+
+    <div id="monsterStats">
+      <h3 id="monsterName">Monster</h3>
+      <div>
+        Health: <span id="monsterHealthText">100</span>/<span id="monsterMaxHealthText">100</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill monster-bar" id="monsterHealthBar" style="width: 100%"></div>
+      </div>
+      <div>Level: <span id="monsterLevel">1</span></div>
+    </div>
+
+    <div id="text">
+      Welcome to the Enhanced RPG Adventure! You are a Level 1 Adventurer.
+      Fight monsters, gain XP, unlock magic at Level 3, and become a legend!
+    </div>
+
+    <div class="controls">
+      <button id="button1" class="btn">Go to Store</button>
+      <button id="button2" class="btn">Go to Cave</button>
+      <button id="button3" class="btn">Fight Dragon</button>
+    </div>
+
+    <div id="spellControls" class="spell-buttons">
+      <button class="spell-btn" onclick="castSpell('heal')">
+        💚 Heal (10 mana)
+      </button>
+      <button class="spell-btn" onclick="castSpell('fireball')">
+        🔥 Fire (15 mana)
+      </button>
+      <button class="spell-btn" onclick="castSpell('lightning')">
+        ⚡ Lightning (20 mana)
+      </button>
+      <button class="spell-btn" onclick="castSpell('shield')">
+        🛡️ Shield (12 mana)
+      </button>
+    </div>
+
+    <div id="combatLog">Game started! Good luck adventurer!</div>
+  </div>
+  <script src="./script.js"></script>
+</body>
+
 </html>

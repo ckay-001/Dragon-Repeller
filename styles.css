@@ -1,306 +1,216 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #0a0a23, #1a1a3a);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  color: white;
   margin: 0;
   padding: 20px;
-  box-sizing: border-box;
 }
-
-#game {
-  max-width: 600px;
-  width: 100%;
-  background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  border-radius: 15px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  padding: 20px;
-  color: #333;
-}
-
-#text {
-  background: linear-gradient(135deg, #0a0a23, #1a1a3a);
-  color: #ffffff;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  min-height: 80px;
-  font-size: 16px;
-  line-height: 1.5;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-#stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin: 15px 0;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  border: 2px solid #e9ecef;
-}
-
-.stat {
-  text-align: center;
-  padding: 10px;
+.container {
+  max-width: 800px;
+  margin: 0 auto;
   background: white;
+  color: #333;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+.header {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
+}
+.stat-card {
+  background: #f8f9fa;
+  padding: 15px;
   border-radius: 8px;
+  text-align: center;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-
 .stat-label {
   font-size: 12px;
-  color: #6c757d;
-  text-transform: uppercase;
-  font-weight: bold;
+  color: #666;
   margin-bottom: 5px;
 }
-
 .stat-value {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   color: #0a0a23;
 }
-
-progress {
+.progress-bar {
   width: 100%;
-  height: 20px;
-  border-radius: 10px;
-  overflow: hidden;
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
   margin-top: 5px;
-  border: none;
+  overflow: hidden;
 }
-
-progress::-webkit-progress-bar {
-  background: #e9ecef;
-  border-radius: 10px;
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
 }
-
-progress::-webkit-progress-value {
-  background: linear-gradient(90deg, #28a745, #20c997);
-  border-radius: 10px;
-  transition: all 0.3s ease;
+.health-bar {
+  background: #28a745;
 }
-
-#monsterHealthBar::-webkit-progress-value {
-  background: linear-gradient(90deg, #dc3545, #e74c3c);
+.mana-bar {
+  background: #007bff;
 }
-
+.xp-bar {
+  background: #ffc107;
+}
+.monster-bar {
+  background: #dc3545;
+}
+#text {
+  background: #0a0a23;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 15px 0;
+  min-height: 80px;
+  line-height: 1.5;
+}
 #monsterStats {
   display: none;
-  background: linear-gradient(135deg, #dc3545, #c82333);
+  background: #dc3545;
   color: white;
   padding: 15px;
-  margin: 15px 0;
-  border-radius: 10px;
+  border-radius: 8px;
   text-align: center;
-  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+  margin: 15px 0;
 }
-
-#monsterStats h3 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  text-transform: capitalize;
-}
-
-#controls {
+.controls {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-top: 20px;
+  gap: 10px;
+  margin: 20px 0;
 }
-
-button {
-  padding: 15px 20px;
-  font-size: 16px;
+.btn {
+  padding: 12px 15px;
+  font-size: 14px;
   font-weight: bold;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   background: linear-gradient(145deg, #feac32, #ffac33);
   color: #0a0a23;
-  box-shadow: 0 4px 15px rgba(254, 172, 50, 0.4);
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
 }
-
-button:hover {
+.btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(254, 172, 50, 0.6);
-  background: linear-gradient(145deg, #ffac33, #feac32);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-
-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(254, 172, 50, 0.4);
+.spell-buttons {
+  display: none;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 15px 0;
 }
-
+.spell-btn {
+  padding: 8px;
+  font-size: 12px;
+  background: #6f42c1;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.spell-btn:hover {
+  background: #5a32a3;
+}
+.spell-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 #combatLog {
   background: #f8f9fa;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  padding: 15px;
-  margin-top: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
   height: 120px;
   overflow-y: auto;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.4;
+  font-family: monospace;
+  font-size: 12px;
+  margin: 15px 0;
 }
-
-.damage-number {
+.log-damage {
   color: #dc3545;
   font-weight: bold;
 }
-
-.heal-number {
+.log-heal {
   color: #28a745;
   font-weight: bold;
 }
-
-.miss-text {
-  color: #6c757d;
+.log-miss {
+  color: #666;
   font-style: italic;
 }
-
-.game-title {
-  text-align: center;
-  color: #0a0a23;
-  margin-bottom: 20px;
-  font-size: 28px;
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 600px) {
-  #stats {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  #controls {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  button {
-    padding: 12px 15px;
-    font-size: 14px;
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-body {
-  font-family: Arial, sans-serif;
-  background-color: #0a0a23;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  color: fff;
-}
-
-#health, #monsterHealth {
-  width: 200px;
-  height: 20px;
-}
-
-#combatLog {
-  margin-top: 10px;
-  padding: 5px;
-  border: 1px solid #ccc;
-  height: 100px;
-  overflow-y: auto;
-}
-
-#text {
-  background-color: #0a0a23;
-  color: #ffffff;
-  padding: 10px;
-}
-
-#game {
-  max-width: 500px;
-  max-height: 400px;
-  background-color: #ffffff;
-  color: #ffffff;
-  margin: 30px auto 0px;
-  padding: 10px;
-}
-
-#controls,
-#stats {
-  border: 1px solid #0a0a23;
-  padding: 5px;
-  color: #0a0a23;
-}
-
-#stats {
-  display: flex;
-  justify-content: space-around;
-  margin: 10px 0;
-  font-size: 18px;
+.log-critical {
+  color: #ff6b35;
   font-weight: bold;
 }
-
-#monsterStats {
-  display: none;
-  border: 2px solid #ff4d4d;
-  padding: 10px;
-  margin-top: 10px;
+.log-level {
+  color: #007bff;
+  font-weight: bold;
+}
+.log-magic {
+  color: #6f42c1;
+  font-weight: bold;
+}
+.level-up-animation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffd700;
+  color: #333;
+  padding: 20px;
   border-radius: 10px;
-  background-color: #660000;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  animation: levelUpPop 2s ease;
+  z-index: 1000;
 }
-
-progress {
-  width: 100px;
-  height: 15px;
-  border-radius: 5px;
-  overflow: hidden;
+@keyframes levelUpPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
-
-progress::-webkit-progress-bar {
-  background: #444;
-  border-radius: 5px;
+.save-load {
+  display: flex;
+  gap: 8px;
+  margin: 15px 0;
 }
-
-progress::-webkit-progress-value {
-  background: #4caf50;
-  border-radius: 5px;
+.save-load button {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
 }
-
-#monsterHealthBar::-webkit-progress-value {
-  background: #e74c3c;
+@media (max-width: 600px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
-
-.stat {
-  padding-right: 10px;
-}
-
-button {
-  cursor: pointer;
-  color: #0a0a23;
-  background-color: #feac32;
-  background-image: linear-gradient(#fecc4c, #ffac33);
-  border: 3px solid #feac32;
-}
-*/
