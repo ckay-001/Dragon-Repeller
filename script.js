@@ -152,6 +152,7 @@ function buyHealth() {
   } else {
     document.getElementById("text").innerHTML = "Not enough gold!";
   }
+  setTimeout(() => goStore(), 1000);
 }
 
 function buyWeapon() {
@@ -170,6 +171,7 @@ function buyWeapon() {
   } else {
     document.getElementById("text").innerHTML = "Already have best weapon!";
   }
+  setTimeout(() => goStore(), 1000);
 }
 
 function buyMana() {
@@ -186,6 +188,7 @@ function buyMana() {
   } else {
     document.getElementById("text").innerHTML = "Not enough gold!";
   }
+  setTimeout(() => goStore(), 1000);
 }
 
 // Combat
@@ -438,6 +441,9 @@ function resetProgress() {
 // Initialize
 updateUI();
 goTown();
+
+
+
 
 /*// Game Data
 const elements = {
