@@ -90,7 +90,7 @@ body {
 }
 .controls {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin: 20px 0;
 }
@@ -108,6 +108,14 @@ body {
 .btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.btn-primary {
+  background: linear-gradient(145deg, #feac32, #ffac33);
+  color: #0a0a23;
+}
+.btn-secondary {
+  background: linear-gradient(145deg, #6c757d, #5a6268);
+  color: white;
 }
 .spell-buttons {
   display: none;

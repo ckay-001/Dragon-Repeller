@@ -42,27 +42,29 @@ const locations = [
   },
   {
     name: "store",
-    buttonText: ["Health (15g)", "Weapon (50g)", "Mana (20g)"],
-    buttonFunctions: [buyHealth, buyWeapon, buyMana],
+    buttonText: ["Health (15g)", "Weapon (50g)", "Mana (20g)", "Back to Town"],
+    buttonFunctions: [buyHealth, buyWeapon, buyMana, goTown], 
     text: "Welcome to the store! What would you like to buy?",
   },
   {
     name: "cave",
-    buttonText: ["Fight Slime", "Fight Goblin", "Fight Orc"],
+    buttonText: ["Fight Slime", "Fight Goblin", "Fight Orc", "Back to Town"],
     buttonFunctions: [
       () => fightMonster(0),
       () => fightMonster(1),
       () => fightMonster(2),
+      goTown 
     ],
     text: "Dark cave with weak monsters. Good for beginners.",
   },
   {
     name: "forest",
-    buttonText: ["Fight Beast", "Fight Wizard", "Fight Dragon"],
+    buttonText: ["Fight Beast", "Fight Wizard", "Fight Dragon", "Back to Town"],
     buttonFunctions: [
       () => fightMonster(3),
       () => fightMonster(4),
       () => fightMonster(5),
+      goTown 
     ],
     text: "Mystical forest with powerful creatures. Danger awaits!",
   },
@@ -113,6 +115,31 @@ function logCombat(message, type = "normal") {
 
 function update(location) {
   document.getElementById("monsterStats").style.display = "none";
+  
+  const buttons = document.querySelectorAll('.controls .btn');
+  buttons.forEach(btn => {
+    btn.style.display = 'none';
+  });
+  
+  for (let i = 0; i < location.buttonText.length; i++) {
+    const button = document.getElementById(`button${i+1}`);
+    if (button) {
+      button.style.display = 'block';
+      button.innerText = location.buttonText[i];
+      button.onclick = location.buttonFunctions[i];
+      
+      if (location.buttonText[i] === "Back to Town") {
+        button.className = "btn btn-secondary";
+      } 
+    }
+  }
+  
+  document.getElementById("text").innerHTML = location.text;
+  updateUI();
+}
+
+/*function update(location) {
+  document.getElementById("monsterStats").style.display = "none";
   document.getElementById("button1").innerText = location.buttonText[0];
   document.getElementById("button2").innerText = location.buttonText[1];
   document.getElementById("button3").innerText = location.buttonText[2];
@@ -121,7 +148,7 @@ function update(location) {
   document.getElementById("button3").onclick = location.buttonFunctions[2];
   document.getElementById("text").innerHTML = location.text;
   updateUI();
-}
+}*/
 
 // Navigation
 function goTown() {
