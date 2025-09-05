@@ -256,7 +256,63 @@ function fightMonster(index) {
   logCombat(`${monster.name} (Level ${monster.level}) appears!`);
 }
 
+
 function attack() {
+  const monster = monsters[gameState.fighting];
+  const weapon  = weapons[gameState.currentWeapon];
+
+  // --- Monster attacks first ---
+  const monsterDamage = getMonsterAttackValue(monster.level);
+  gameState.health -= monsterDamage;
+
+  if (monsterDamage > 0) {
+    logCombat(`The ${monster.name} hits you for ${monsterDamage}!`, "damage");
+  } else {
+    logCombat(`The ${monster.name} misses!`, "miss");
+  }
+
+  // --- Player attacks ---
+  if (isMonsterHit()) {
+    let playerDamage = weapon.power + Math.floor(Math.random() * gameState.level) + 1;
+
+    if (Math.random() < 0.15) { // 15% crit chance
+      playerDamage *= 2;
+      logCombat(`💥 Critical hit! ${playerDamage} damage!`, "critical");
+    } else {
+      logCombat(`You strike with your ${weapon.name} for ${playerDamage} damage!`);
+    }
+
+    gameState.monsterHealth -= playerDamage;
+  } else {
+    logCombat("You miss your attack!", "miss");
+  }
+
+  // --- Weapon durability (10% chance to break) ---
+  if (Math.random() <= 0.1 && gameState.inventory.length > 1) {
+    const broken = gameState.inventory.pop();
+    gameState.currentWeapon = Math.max(0, gameState.currentWeapon - 1);
+    logCombat(`💔 Your ${broken} breaks!`, "damage");
+  }
+
+  // --- Update UI ---
+  updateCombat();
+}
+
+function getMonsterAttackValue(level) {
+  // Monster attack scales with level and reduces based on player level
+  const hit = (level * 5) - Math.floor(Math.random() * gameState.level);
+  return hit > 0 ? hit : 0; // never negative
+}
+
+function isMonsterHit() {
+  // Monsters can miss — but player gets guaranteed hits if health is very low
+  return Math.random() > 0.2 || gameState.health < 20;
+}
+
+
+
+
+/*function attack() {
   // NEW: Check if monster is already defeated
   if (gameState.monsterDefeated) {
     logCombat("This monster is already defeated!", "miss");
@@ -310,7 +366,7 @@ function attack() {
       disableCombatButtons(false);
     }
   }, 800);
-}
+}*/
 
 /*function attack() {
   const monster = monsters[gameState.fighting];

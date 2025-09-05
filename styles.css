@@ -222,3 +222,23 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* Critical hit glow (red) */
+@keyframes critGlow {
+  0%   { box-shadow: 0 0 5px 2px red; }
+  100% { box-shadow: none; }
+}
+
+/* Miss glow (grey) */
+@keyframes missGlow {
+  0%   { box-shadow: 0 0 5px 2px grey; }
+  100% { box-shadow: none; }
+}
+
+/* Apply the classes */
+.crit-effect {
+  animation: critGlow 0.5s ease;
+}
+
+.miss-effect {
+  animation: missGlow 0.5s ease;
+}
