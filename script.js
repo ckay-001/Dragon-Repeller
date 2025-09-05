@@ -13,6 +13,7 @@ let gameState = {
   monsterHealth: 0,
   shieldActive: false,
   magicUnlocked: false,
+  monsterDefeated: false,
 };
 
 // Game Data
@@ -116,21 +117,40 @@ function logCombat(message, type = "normal") {
 function update(location) {
   document.getElementById("monsterStats").style.display = "none";
   
-  const buttons = document.querySelectorAll('.controls .btn');
-  buttons.forEach(btn => {
-    btn.style.display = 'none';
-  });
+  // Reset all buttons to default state
+  for (let i = 1; i <= 4; i++) {
+    const button = document.getElementById(`button${i}`);
+    if (button) {
+      button.style.display = 'block';
+      button.className = "btn btn-primary";
+      button.disabled = false; // NEW: Enable buttons by default
+    }
+  }
   
+  // Hide the 4th button for town and fight locations
+  if (location.name === "town" || location.name === "fight") {
+    document.getElementById("button4").style.display = 'none';
+  }
+  
+  // NEW: Hide spell buttons when not in combat
+  if (location.name !== "fight") {
+    document.getElementById("spellControls").style.display = "none";
+  } else if (gameState.magicUnlocked) {
+    // Show spell buttons only during combat if magic is unlocked
+    document.getElementById("spellControls").style.display = "grid";
+  }
+  
+  // Set button text and functions
   for (let i = 0; i < location.buttonText.length; i++) {
     const button = document.getElementById(`button${i+1}`);
     if (button) {
-      button.style.display = 'block';
       button.innerText = location.buttonText[i];
       button.onclick = location.buttonFunctions[i];
       
+      // Style the "Back to Town" button differently
       if (location.buttonText[i] === "Back to Town") {
         button.className = "btn btn-secondary";
-      } 
+      }
     }
   }
   
@@ -237,6 +257,15 @@ function fightMonster(index) {
 }
 
 function attack() {
+  // NEW: Check if monster is already defeated
+  if (gameState.monsterDefeated) {
+    logCombat("This monster is already defeated!", "miss");
+    return;
+  }
+  
+  // NEW: Disable buttons during combat
+  disableCombatButtons(true);
+  
   const monster = monsters[gameState.fighting];
   const weapon = weapons[gameState.currentWeapon];
 
@@ -274,7 +303,54 @@ function attack() {
   }
 
   updateCombat();
+  
+  // NEW: Re-enable buttons after a short delay
+  setTimeout(() => {
+    if (gameState.health > 0 && gameState.monsterHealth > 0) {
+      disableCombatButtons(false);
+    }
+  }, 800);
 }
+
+/*function attack() {
+  const monster = monsters[gameState.fighting];
+  const weapon = weapons[gameState.currentWeapon];
+
+  // Monster attacks
+  let monsterDmg = Math.max(
+    1,
+    monster.level * 3 - Math.floor(Math.random() * gameState.level)
+  );
+  if (gameState.shieldActive) {
+    monsterDmg = Math.floor(monsterDmg * 0.3);
+    gameState.shieldActive = false;
+    logCombat("🛡️ Shield blocks damage!", "heal");
+  }
+  gameState.health -= monsterDmg;
+  logCombat(`${monster.name} deals ${monsterDmg} damage!`, "damage");
+
+  // Player attacks
+  if (Math.random() < 0.85) {
+    let damage = weapon.power + Math.floor(Math.random() * gameState.level * 2);
+    if (Math.random() < 0.15) {
+      damage *= 2;
+      logCombat(`💥 CRITICAL! ${damage} damage!`, "critical");
+    } else {
+      logCombat(`You deal ${damage} damage!`);
+    }
+    gameState.monsterHealth -= damage;
+
+    // Break weapon
+    weapon.durability -= Math.random() * 3;
+    if (weapon.durability <= 0 && gameState.inventory.length > 1) {
+      breakWeapon();
+    }
+  } else {
+    logCombat("You miss!", "miss");
+  }
+
+  updateCombat();
+}*/
 
 function defend() {
   const monster = monsters[gameState.fighting];
@@ -317,9 +393,54 @@ function updateCombat() {
 
   if (gameState.health <= 0) {
     defeat();
+  } else if (gameState.monsterHealth <= 0 && !gameState.monsterDefeated) {
+    // NEW: Only process victory if monster wasn't already defeated
+    gameState.monsterDefeated = true;
+    victory();
+  }
+}
+
+/*function updateCombat() {
+  const monster = monsters[gameState.fighting];
+  document.getElementById("healthText").innerText = Math.max(
+    0,
+    gameState.health
+  );
+  document.getElementById("healthBar").style.width =
+    Math.max(0, gameState.health / gameState.maxHealth) * 100 + "%";
+  document.getElementById("monsterHealthText").innerText = Math.max(
+    0,
+    gameState.monsterHealth
+  );
+  document.getElementById("monsterHealthBar").style.width =
+    Math.max(0, gameState.monsterHealth / monster.health) * 100 + "%";
+  document.getElementById("manaText").innerText = gameState.mana;
+  document.getElementById("manaBar").style.width =
+    (gameState.mana / gameState.maxMana) * 100 + "%";
+
+  if (gameState.health <= 0) {
+    defeat();
   } else if (gameState.monsterHealth <= 0) {
     victory();
   }
+}*/
+
+function disableCombatButtons(disabled) {
+  // Only disable buttons during combat, not in other locations
+  if (gameState.fighting === null) return;
+  
+  for (let i = 1; i <= 3; i++) {
+    const button = document.getElementById(`button${i}`);
+    if (button) {
+      button.disabled = disabled;
+    }
+  }
+  
+  // Also disable spell buttons during combat actions
+  const spellButtons = document.querySelectorAll('.spell-btn');
+  spellButtons.forEach(button => {
+    button.disabled = disabled;
+  });
 }
 
 function victory() {
@@ -328,8 +449,24 @@ function victory() {
   gameState.totalXp += monster.xp;
   logCombat(`Victory! +${monster.xp} XP, +${monster.gold} gold!`, "heal");
   checkLevelUp();
-  setTimeout(goTown, 2000);
+  
+  // NEW: Disable combat buttons after victory
+  disableCombatButtons(true);
+  
+  setTimeout(() => {
+    gameState.monsterDefeated = false; // Reset for next combat
+    goTown();
+  }, 2000);
 }
+
+/*function victory() {
+  const monster = monsters[gameState.fighting];
+  gameState.gold += monster.gold;
+  gameState.totalXp += monster.xp;
+  logCombat(`Victory! +${monster.xp} XP, +${monster.gold} gold!`, "heal");
+  checkLevelUp();
+  setTimeout(goTown, 2000);
+}*/
 
 function defeat() {
   gameState.health = Math.floor(gameState.maxHealth * 0.5);
@@ -383,10 +520,17 @@ function breakWeapon() {
 
 // Magic
 function castSpell(spell) {
+   if (gameState.fighting === null || gameState.monsterDefeated) {
+    logCombat("You can only cast spells during combat!", "damage");
+    return;
+  }
+
   if (!gameState.magicUnlocked) {
     logCombat("Magic not unlocked!", "damage");
     return;
   }
+
+  disableCombatButtons(true);
 
   let cost = 0,
     effect = "";
@@ -439,6 +583,12 @@ function castSpell(spell) {
   } else {
     logCombat("Not enough mana!", "damage");
   }
+
+  setTimeout(() => {
+    if (gameState.health > 0 && gameState.monsterHealth > 0) {
+      disableCombatButtons(false);
+    }
+  }, 800);
 }
 
 // Save/Load
