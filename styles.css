@@ -214,38 +214,17 @@ body {
   padding: 8px;
   font-size: 12px;
 }
+
+
+
 @media (max-width: 600px) {
-  #game {
-    max-width: 95%;     /* scale down more */
-    max-height: 90vh;
-    font-size: 14px;    /* smaller text */
-  }
-
-  #stats {
-    font-size: 14px;
-    flex-direction: column; /* stack stats vertically */
-    align-items: flex-start;
-  }
-
-  progress {
-    width: 80px;        /* shrink health bars */
-  }
-
-  button {
-    font-size: 14px;
-    padding: 5px;
-  }
-}
-
-
-/*@media (max-width: 600px) {
   .controls {
     grid-template-columns: 1fr;
   }
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-}*/
+}
 /* Critical hit glow (red) */
 @keyframes critGlow {
   0%   { box-shadow: 0 0 5px 2px red; }
