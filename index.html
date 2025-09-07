@@ -16,9 +16,9 @@
     </div>
 
     <div class="save-load">
-      <button class="btn btn-primary" onclick="saveGame()">💾 Save</button>
-      <button class="btn btn-primary" onclick="loadGame()">📁 Load</button>
-      <button class="btn btn-secondary" onclick="resetProgress()">🔄 Reset</button>
+      <button class="btn btn-primary combat-btn" onclick="saveGame()">💾 Save</button>
+      <button class="btn btn-primary combat-btn" onclick="loadGame()">📁 Load</button>
+      <button class="btn btn-secondary combat-btn" onclick="resetProgress()">🔄 Reset</button>
     </div>
 
     <div class="stats-grid">
@@ -87,13 +87,13 @@
     </div>
 
     <div id="spellControls" class="spell-buttons">
-      <button class="spell-btn" onclick="castSpell('heal')">
+      <button class="spell-btn combat-btn" onclick="castSpell('heal')">
         💚 Heal (10 mana)
       </button>
-      <button class="spell-btn" onclick="castSpell('fireball')">
+      <button class="spell-btn combat-btn" onclick="castSpell('fireball')">
         🔥 Fire (15 mana)
       </button>
-      <button class="spell-btn" onclick="castSpell('lightning')">
+      <button class="spell-btn combat-btn" onclick="castSpell('lightning')">
         ⚡ Lightning (20 mana)
       </button>
       <button class="spell-btn" onclick="castSpell('shield')">
@@ -102,6 +102,14 @@
     </div>
 
     <div id="combatLog">Game started! Good luck adventurer!</div>
+    <div id="debug-panel" style="margin-top:20px; padding:10px; border:1px solid #444; background:#222; color:#fff;">
+      <h3>🛠 Debug Tools</h3>
+      <button onclick="debugUnlockMagic()">Unlock Magic</button>
+      <button onclick="debugTestShield()">Test Shield</button>
+      <button onclick="debugMaxStats()">Max Stats</button>
+      <button onclick="debugHeal()">Heal to Full</button>
+    </div>
+
   </div>
   <script src="./script.js"></script>
 </body>
