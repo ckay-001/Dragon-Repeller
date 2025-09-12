@@ -18,11 +18,11 @@ let gameState = {
 
 // Game Data
 const weapons = [
-  { name: "stick", power: 5, durability: 100 },
-  { name: "dagger", power: 30, durability: 80 },
-  { name: "hammer", power: 50, durability: 60 },
-  { name: "sword", power: 100, durability: 40 },
-  { name: "magic blade", power: 150, durability: 50 },
+  { name: "stick", power: 8, durability: 100 },
+  { name: "dagger", power: 25, durability: 90 },
+  { name: "hammer", power: 50, durability: 70 },
+  { name: "sword", power: 100, durability: 50 },
+  { name: "magic blade", power: 150, durability: 60 },
 ];
 
 const monsters = [
@@ -213,23 +213,52 @@ function buyHealth() {
   setTimeout(() => goStore(), 1000);
 }
 
-function buyWeapon() {
-  if (gameState.currentWeapon < weapons.length - 1 && gameState.gold >= 50) {
+// --- Confirm & Cancel Buttons for Weapon Purchase ---
+document.getElementById("confirmBuy").addEventListener("click", () => {
+  if (pendingWeaponIndex !== null) {
+    const weapon = weapons[pendingWeaponIndex];
     gameState.gold -= 50;
-    gameState.currentWeapon++;
-    const weapon = weapons[gameState.currentWeapon];
+    gameState.currentWeapon = pendingWeaponIndex;
     gameState.inventory.push(weapon.name);
     weapon.durability = weapon.durability || 100;
+
     updateUI();
-    document.getElementById("text").innerHTML = `Bought ${
-      weapon.name
-    }! Inventory: ${gameState.inventory.join(", ")}`;
-  } else if (gameState.gold < 50) {
-    document.getElementById("text").innerHTML = "Not enough gold!";
-  } else {
-    document.getElementById("text").innerHTML = "Already have best weapon!";
+    document.getElementById("text").innerHTML =
+      `Bought ${weapon.name}! Inventory: ${gameState.inventory.join(", ")}`;
+
+    document.getElementById("confirmControls").style.display = "none";
+    pendingWeaponIndex = null;
+    setTimeout(() => goStore(), 1000);
   }
-  setTimeout(() => goStore(), 1000);
+});
+document.getElementById("cancelBuy").addEventListener("click", () => {
+  document.getElementById("text").innerHTML = "Purchase canceled.";
+  document.getElementById("confirmControls").style.display = "none";
+  pendingWeaponIndex = null;
+});
+
+let pendingWeaponIndex = null; // store which weapon is being previewed
+
+function buyWeapon() {
+  if (gameState.currentWeapon < weapons.length - 1) {
+    const nextWeapon = weapons[gameState.currentWeapon + 1];
+
+    if (gameState.gold >= 50) {
+      pendingWeaponIndex = gameState.currentWeapon + 1;
+
+      document.getElementById("text").innerHTML =
+        `Buy <b>${nextWeapon.name}</b> for 50 gold?<br>
+         🗡 Power: ${nextWeapon.power}<br>
+         🛡 Durability: ${nextWeapon.durability}`;
+
+      // Show confirm buttons
+      document.getElementById("confirmControls").style.display = "block";
+    } else {
+      document.getElementById("text").innerHTML = "Not enough gold!";
+    }
+  } else {
+    document.getElementById("text").innerHTML = "Already have the best weapon!";
+  }
 }
 
 function buyMana() {

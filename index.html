@@ -79,6 +79,11 @@
       Fight monsters, gain XP, unlock magic at Level 3, and become a legend!
     </div>
 
+    <div id="confirmControls" style="display:none; margin-top:10px;">
+      <button id="confirmBuy" class="btn btn-primary">✅ Confirm</button>
+      <button id="cancelBuy" class="btn btn-secondary">❌ Cancel</button>
+    </div>
+
     <div class="controls">
       <button id="button1" class="btn btn-primary">Go to Store</button>
       <button id="button2" class="btn btn-primary">Go to Cave</button>
@@ -96,7 +101,7 @@
       <button class="spell-btn combat-btn" onclick="castSpell('lightning')">
         ⚡ Lightning (20 mana)
       </button>
-      <button class="spell-btn" onclick="castSpell('shield')">
+      <button class="spell-btn combat-btn" onclick="castSpell('shield')">
         🛡️ Shield (12 mana)
       </button>
     </div>
