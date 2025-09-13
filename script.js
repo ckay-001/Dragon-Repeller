@@ -14,6 +14,8 @@ let gameState = {
   shieldActive: false,
   magicUnlocked: false,
   monsterDefeated: false,
+  powerStrikeCooldown: 0,
+  actionInProgress: false,
 };
 
 // Game Data
@@ -136,8 +138,54 @@ function logCombat(message, type) {
   }
 }
 
-
 function update(location) {
+  document.getElementById("monsterStats").style.display = "none";
+  
+  // FIXED: Hide confirm controls when changing locations
+  document.getElementById("confirmControls").style.display = "none";
+  pendingWeaponIndex = null;
+  
+  // Reset all buttons to default state
+  for (let i = 1; i <= 4; i++) {
+    const button = document.getElementById(`button${i}`);
+    if (button) {
+      button.style.display = 'block';
+      button.className = "btn btn-primary";
+      button.disabled = false;
+    }
+  }
+  
+  // Hide the 4th button for town and fight locations
+  if (location.name === "town" || location.name === "fight") {
+    document.getElementById("button4").style.display = 'none';
+  }
+  
+  // Hide spell buttons when not in combat
+  if (location.name !== "fight") {
+    document.getElementById("spellControls").style.display = "none";
+  } else if (gameState.magicUnlocked) {
+    document.getElementById("spellControls").style.display = "grid";
+  }
+  
+  // Set button text and functions
+  for (let i = 0; i < location.buttonText.length; i++) {
+    const button = document.getElementById(`button${i+1}`);
+    if (button) {
+      button.innerText = location.buttonText[i];
+      button.onclick = location.buttonFunctions[i];
+      
+      if (location.buttonText[i] === "Back to Town") {
+        button.className = "btn btn-secondary";
+      }
+    }
+  }
+  
+  document.getElementById("text").innerHTML = location.text;
+  updateUI();
+}
+
+/*function update(location) {
+
   document.getElementById("monsterStats").style.display = "none";
   
   // Reset all buttons to default state
@@ -179,7 +227,7 @@ function update(location) {
   
   document.getElementById("text").innerHTML = location.text;
   updateUI();
-}
+}*/
 
 // Navigation
 function goTown() {
@@ -280,6 +328,7 @@ function buyMana() {
 
 // Combat
 function fightMonster(index) {
+  document.getElementById("powerStrikeBtn").disabled = gameState.mana < 5;
   gameState.fighting = index;
   const monster = monsters[index];
   gameState.monsterHealth = monster.health;
@@ -298,9 +347,30 @@ function fightMonster(index) {
 
   disableCombatButtons(false);
   enableSpellButtonsIfUnlocked();
+
+  // ✅ Disable Power Strike if on cooldown or lacking mana
+  document.getElementById("powerStrikeBtn").disabled =
+    gameState.powerStrikeCooldown > 0 || gameState.mana < 5;
+
+  // ✅ Hide or show spells based on unlock status
+  if (gameState.magicUnlocked) {
+    document.getElementById("spellControls").style.display = "block";
+    enableSpellButtonsIfUnlocked();
+  } else {
+    document.getElementById("spellControls").style.display = "none";
+  }
+
+  updateCombat();
 }
 
 function attack() {
+  if (gameState.actionInProgress) {
+    return; // Prevent overlapping actions
+  }
+
+  gameState.actionInProgress = true;
+  disableCombatButtons(true);
+
   const monster = monsters[gameState.fighting];
   const weapon = weapons[gameState.currentWeapon];
 
@@ -348,6 +418,73 @@ function attack() {
 
   // --- Update UI ---
   updateCombat();
+
+  // Reduce Power Strike cooldown if active
+  if (gameState.powerStrikeCooldown > 0) {
+    gameState.powerStrikeCooldown--;
+  }
+
+  // Enable or disable the Power Strike button
+  document.getElementById("powerStrikeBtn").disabled =
+    gameState.powerStrikeCooldown > 0 || gameState.mana < 5;
+
+  setTimeout(() => {
+    gameState.actionInProgress = false;
+    if (gameState.health > 0 && gameState.monsterHealth > 0) {
+      disableCombatButtons(false);
+    }
+  }, 800);
+}
+
+// --- Special Attack: Power Strike ---
+function powerStrike() {
+  if (gameState.actionInProgress) {
+    return; // Prevent overlapping actions
+  }
+
+  // Cannot use if on cooldown
+  if (gameState.powerStrikeCooldown > 0) {
+    logCombat(`⏳ Power Strike on cooldown (${gameState.powerStrikeCooldown} turn(s))`, "damage");
+    return;
+  }
+
+  // Mana cost
+  const manaCost = 5;
+  if (gameState.mana < manaCost) {
+    logCombat("❌ Not enough mana for Power Strike!", "damage");
+    return;
+  }
+
+  const monster = monsters[gameState.fighting];
+  const weapon = weapons[gameState.currentWeapon];
+
+  // Spend mana and apply cooldown
+  gameState.mana -= manaCost;
+  gameState.powerStrikeCooldown = 3; // 3-turn cooldown
+
+  // Big damage (2× weapon power + small random bonus)
+  let damage = (weapon.power * 2) + Math.floor(Math.random() * gameState.level);
+  gameState.monsterHealth -= damage;
+
+  logCombat(`💥 POWER STRIKE! You deal ${damage} damage!`, "critical");
+
+  // Monster retaliates
+  const monsterDamage = getMonsterAttackValue(monster.level);
+  gameState.health -= monsterDamage;
+  if (monsterDamage > 0) {
+    logCombat(`${monster.name} counters for ${monsterDamage}!`, "damage");
+  }
+
+  // Update UI and combat
+  updateCombat();
+}
+
+function monsterAttack() {
+  const monster = monsters[gameState.fighting];
+  const damage = getMonsterAttackValue(monster.level);
+  gameState.health -= damage;
+  logCombat(`${monster.name} attacks for ${damage} damage!`, "damage");
+  updateCombat();
 }
 
 // Returns integer damage a monster deals based on its level and player level.
@@ -369,46 +506,48 @@ function isMonsterHit() {
 }
 
 function defend() {
+  if (gameState.actionInProgress) {
+    return; // Prevent overlapping actions
+  }
+
   const monster = monsters[gameState.fighting];
   const damage = Math.floor(monster.level * 1.5);
   gameState.health -= damage;
   gameState.mana = Math.min(gameState.mana + 5, gameState.maxMana);
   logCombat(`Defend! Take ${damage} damage, gain 5 mana`, "heal");
   updateCombat();
+  if (gameState.powerStrikeCooldown > 0) {
+    gameState.powerStrikeCooldown--;
+  }
+  document.getElementById("powerStrikeBtn").disabled =
+    gameState.powerStrikeCooldown > 0 || gameState.mana < 5;
+  
+  setTimeout(() => {
+    gameState.actionInProgress = false;
+    if (gameState.health > 0 && gameState.monsterHealth > 0) {
+      disableCombatButtons(false);
+    }
+  }, 800);
 }
 
 function flee() {
-  if (Math.random() < 0.7) {
-    // ✅ Successful escape
-    logCombat("🏃 You escaped successfully!", "heal");
-
-    // Reset combat state
-    gameState.fighting = null;
-    gameState.monsterDefeated = false;
-    disableCombatButtons(true);
-    document.querySelectorAll(".spell-btn").forEach(btn => btn.disabled = true);
-
-    goTown();
-  } else {
-    // ❌ Failed escape
-    logCombat("❌ You fail to escape!", "damage");
-
-    // Monster attacks once
-    const monster = monsters[gameState.fighting];
-    const monsterDamage = getMonsterAttackValue(monster.level);
-    gameState.health -= monsterDamage;
-    logCombat(`${monster.name} hits you for ${monsterDamage}`, "damage");
-
-    // Check if player dies
-    if (gameState.health <= 0) {
-      gameState.health = 0;
-      updateUI();
-      defeat(); // ✅ Player dies if escape fails
-      return;
-    }
-
-    updateCombat();
+  // Attempt to escape
+  const escapeChance = Math.random();
+  if (escapeChance < 0.5) {
+    logCombat("You couldn't escape!", "damage");
+    monsterAttack();
+    return;
   }
+
+  // ✅ Successful escape — reset everything
+  gameState.powerStrikeCooldown = 0; // reset Power Strike cooldown
+  disableCombatButtons(true);
+
+  // ✅ Hide spells to avoid using them in town
+  document.getElementById("spellControls").style.display = "none";
+
+  logCombat("You fled back to town!", "damage");
+  setTimeout(() => goTown(), 800);
 }
 
 function updateCombat() {
@@ -445,6 +584,13 @@ function disableCombatButtons(disabled) {
   });
 }
 
+function hideConfirmButtons() {
+  const confirm = document.getElementById("confirmBuy");
+  const cancel = document.getElementById("cancelBuy");
+  if (confirm) confirm.style.display = "none";
+  if (cancel) cancel.style.display = "none";
+}
+
 function enableSpellButtonsIfUnlocked() {
   const spellButtons = document.querySelectorAll(".spell-btn");
   spellButtons.forEach(btn => {
@@ -459,6 +605,9 @@ function showButtons(ids) {
 
 
 function victory() {
+  gameState.powerStrikeCooldown = 0; // ✅ reset
+  disableCombatButtons(true);
+  document.getElementById("spellControls").style.display = "none";
   const monster = monsters[gameState.fighting];
   gameState.gold += monster.gold;
   gameState.totalXp += monster.xp;
@@ -475,6 +624,9 @@ function victory() {
 }
 
 function defeat() {
+  gameState.powerStrikeCooldown = 0; // ✅ reset
+  disableCombatButtons(true);
+  document.getElementById("spellControls").style.display = "none";
   gameState.health = Math.floor(gameState.maxHealth * 0.5);
   logCombat("Defeated! Respawn with half health. XP preserved!", "damage");
 
@@ -530,6 +682,10 @@ function breakWeapon() {
 
 // Magic
 function castSpell(spell) {
+  if (gameState.actionInProgress) {
+    return; // Prevent overlapping actions
+  }
+
   if (gameState.monsterDefeated || gameState.health <= 0) {
     logCombat("⚠️ Combat already ended!", "damage");
     return;
@@ -622,6 +778,13 @@ function castSpell(spell) {
       updateUI(); // refreshes so the main town/cave buttons appear
     }
  }, 800);
+  
+  if (gameState.powerStrikeCooldown > 0) {
+    gameState.powerStrikeCooldown--;
+  }
+  document.getElementById("powerStrikeBtn").disabled =
+    gameState.powerStrikeCooldown > 0 || gameState.mana < 5;
+
 }
 
 // Save/Load

@@ -91,6 +91,13 @@
       <button id="button4" class="btn btn-secondary" style="display: none;">Back to Town</button>
     </div>
 
+    <div id="combatControls" class="combat-buttons" style="display:none;">
+      <button id="attackBtn" class="btn btn-primary combat-btn" onclick="attack()">⚔️ Attack</button>
+      <button id="defendBtn" class="btn btn-primary combat-btn" onclick="defend()">🛡️ Defend</button>
+      <button id="fleeBtn" class="btn btn-secondary combat-btn" onclick="flee()">🏃 Run</button>
+      <button id="powerStrikeBtn" class="btn btn-warning combat-btn" onclick="powerStrike()">💥 Power Strike</button>
+    </div>
+
     <div id="spellControls" class="spell-buttons">
       <button class="spell-btn combat-btn" onclick="castSpell('heal')">
         💚 Heal (10 mana)
