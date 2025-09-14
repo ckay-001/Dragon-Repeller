@@ -18,6 +18,35 @@ let gameState = {
   actionInProgress: false,
 };
 
+gameState.difficulty = "normal";
+
+// Difficulty multipliers: used for scaling monster health, xp, gold and attack.
+const difficultyMultipliers = {
+  easy: 0.8,
+  normal: 1,
+  hard: 1.5
+};
+
+function getDifficultyMultiplier() {
+  return difficultyMultipliers[gameState.difficulty] || 1;
+}
+
+// Call to set difficulty. You can replace this prompt with a UI control if you want.
+function chooseDifficultyPrompt() {
+  const choice = prompt("Choose difficulty: easy, normal, hard", gameState.difficulty || "normal");
+  const valid = ["easy", "normal", "hard"];
+  gameState.difficulty = valid.includes(choice) ? choice : "normal";
+  document.getElementById("text").innerHTML = `Difficulty set to: ${gameState.difficulty}`;
+}
+
+// Optional: nicer setter for UI buttons
+function setDifficulty(d) {
+  const valid = ["easy", "normal", "hard"];
+  gameState.difficulty = valid.includes(d) ? d : "normal";
+  document.getElementById("text").innerHTML = `Difficulty set to: ${gameState.difficulty}`;
+}
+chooseDifficultyPrompt();
+
 // Game Data
 const weapons = [
   { name: "stick", power: 8, durability: 100 },
@@ -78,6 +107,31 @@ const locations = [
     text: "Combat! Choose wisely.",
   },
 ];
+
+function chooseDifficulty() {
+  const choice = prompt("Choose difficulty: easy, normal, hard", "normal");
+  const validChoices = ["easy", "normal", "hard"];
+  gameState.difficulty = validChoices.includes(choice) ? choice : "normal";
+  document.getElementById("text").innerHTML =
+    `Difficulty set to: ${gameState.difficulty}`;
+}
+chooseDifficulty(); // Call when the game loads
+
+function scaleMonsterStats(monster) {
+  const multipliers = {
+    easy: 0.8,
+    normal: 1,
+    hard: 1.5
+  };
+  const m = multipliers[gameState.difficulty] || 1;
+
+  return {
+    ...monster,
+    health: Math.floor(monster.health * m),
+    xp: Math.floor(monster.xp * m),
+    gold: Math.floor(monster.gold * m)
+  };
+}
 
 // UI Functions
 function updateUI() {
@@ -333,6 +387,45 @@ function buyMana() {
 
 // Combat
 function fightMonster(index) {
+  // Prepare scaled enemy and store it on gameState
+  const base = monsters[index];
+  const scaled = scaleMonsterStats(base);
+  gameState.currentEnemy = scaled;
+  gameState.fighting = index;
+  gameState.monsterHealth = scaled.health;
+  gameState.monsterDefeated = false;
+
+  // Update UI
+  update(locations[4]);
+
+  document.getElementById("monsterStats").style.display = "block";
+  document.getElementById("monsterName").innerText = scaled.name.toUpperCase();
+  document.getElementById("monsterHealthText").innerText = scaled.health;
+  document.getElementById("monsterMaxHealthText").innerText = scaled.health;
+  document.getElementById("monsterLevel").innerText = scaled.level;
+  document.getElementById("monsterHealthBar").style.width = "100%";
+
+  logCombat(`${scaled.name} (Level ${scaled.level}) appears!`);
+
+  disableCombatButtons(false);
+  enableSpellButtonsIfUnlocked();
+
+  // Power strike availability (honor cooldown & mana)
+  document.getElementById("powerStrikeBtn").disabled =
+    gameState.powerStrikeCooldown > 0 || gameState.mana < 5;
+
+  // Show spells only if unlocked
+  if (gameState.magicUnlocked) {
+    document.getElementById("spellControls").style.display = "block";
+    enableSpellButtonsIfUnlocked();
+  } else {
+    document.getElementById("spellControls").style.display = "none";
+  }
+
+  updateCombat();
+}
+
+/*function fightMonster(index) {
   document.getElementById("powerStrikeBtn").disabled = gameState.mana < 5;
   gameState.fighting = index;
   const monster = monsters[index];
@@ -364,9 +457,9 @@ function fightMonster(index) {
   } else {
     document.getElementById("spellControls").style.display = "none";
   }
-
+  
   updateCombat();
-}
+}*/
 
 function attack() {
   if (gameState.actionInProgress) {
@@ -496,10 +589,19 @@ function monsterAttack() {
 // Scales with monster level, but has a random reduction based on player level so higher player level reduces incoming damage somewhat.
 function getMonsterAttackValue(level) {
   const baseAttack = level * 5;  // baseline damage per monster level
+  const multiplier = getDifficultyMultiplier();
+  const scaledBase = Math.floor(baseAttack * multiplier);
+  const playerReduction = Math.floor(Math.random() * Math.max(1, gameState.level));
+  const hit = scaledBase - playerReduction;
+  return hit > 0 ? hit : 0;
+}
+
+/*function getMonsterAttackValue(level) {
+  const baseAttack = level * 5;  // baseline damage per monster level
   const playerReduction = Math.floor(Math.random() * gameState.level); // randomness based on player level
   const hit = baseAttack - playerReduction;
   return hit > 0 ? hit : 0; // never negative
-}
+}*/
 
 // Returns true if player's attack hits. 80% base hit chance,
 // but guarantees hits when player is in danger (low health).
@@ -508,6 +610,17 @@ function isMonsterHit() {
   // Make hitting a bit easier when player is desperate:
   const desperationBonus = gameState.health < (gameState.maxHealth * 0.2) ? 0.15 : 0;
   return Math.random() < (baseHitChance + desperationBonus);
+}
+
+// Create a scaled copy of a monster according to difficulty (does NOT mutate base monster).
+function scaleMonsterStats(monster) {
+  const m = getDifficultyMultiplier();
+  return {
+    ...monster,
+    health: Math.max(1, Math.floor(monster.health * m)),
+    xp: Math.max(1, Math.floor(monster.xp * m)),
+    gold: Math.max(0, Math.floor(monster.gold * m))
+  };
 }
 
 function defend() {
@@ -556,6 +669,27 @@ function flee() {
 }
 
 function updateCombat() {
+  const monster = gameState.currentEnemy || monsters[gameState.fighting] || {health:1};
+  document.getElementById("healthText").innerText = Math.max(0, gameState.health);
+  document.getElementById("healthBar").style.width =
+    Math.max(0, gameState.health / gameState.maxHealth) * 100 + "%";
+  document.getElementById("monsterHealthText").innerText = Math.max(0, gameState.monsterHealth);
+  // use the scaled monster's max health for the bar
+  document.getElementById("monsterHealthBar").style.width =
+    Math.max(0, gameState.monsterHealth / monster.health) * 100 + "%";
+  document.getElementById("manaText").innerText = gameState.mana;
+  document.getElementById("manaBar").style.width =
+    (gameState.mana / gameState.maxMana) * 100 + "%";
+
+  if (gameState.health <= 0) {
+    defeat();
+  } else if (gameState.monsterHealth <= 0 && !gameState.monsterDefeated) {
+    gameState.monsterDefeated = true;
+    victory();
+  }
+}
+
+/*function updateCombat() {
   const monster = monsters[gameState.fighting];
   document.getElementById("healthText").innerText = Math.max(
     0,
@@ -580,7 +714,7 @@ function updateCombat() {
     gameState.monsterDefeated = true;
     victory();
   }
-}
+}*/
 
 function disableCombatButtons(disabled) {
   const combatButtons = document.querySelectorAll('.combat-btn');
@@ -608,8 +742,31 @@ function showButtons(ids) {
   ids.forEach(id => document.getElementById(id).style.display = "inline-block");
 }
 
-
 function victory() {
+  const monster = gameState.currentEnemy || monsters[gameState.fighting];
+  gameState.powerStrikeCooldown = 0;
+  disableCombatButtons(true);
+  document.getElementById("spellControls").style.display = "none";
+  gameState.gold += monster.gold;
+  gameState.totalXp += monster.xp;
+  logCombat(`Victory! +${monster.xp} XP, +${monster.gold} gold!`, "heal");
+  checkLevelUp();
+
+  document.querySelectorAll(".spell-btn").forEach(btn => btn.disabled = true);
+
+  // Dragon special endgame hook
+  if (monster.name && monster.name.toLowerCase() === "dragon") {
+    handleDragonVictory(); // optional special flow (see below)
+  }
+
+  setTimeout(() => {
+    gameState.monsterDefeated = false;
+    gameState.currentEnemy = null; // clear scaled enemy
+    goTown();
+  }, 2000);
+}
+
+/*function victory() {
   gameState.powerStrikeCooldown = 0; // ✅ reset
   disableCombatButtons(true);
   document.getElementById("spellControls").style.display = "none";
@@ -626,6 +783,24 @@ function victory() {
     gameState.monsterDefeated = false;
     goTown();
   }, 2000);
+}*/
+
+function handleDragonVictory() {
+  // example: give a special item, show a final message, unlock NG+ etc.
+  logCombat("🏆 You have slain the DRAGON! The land is saved.", "heal");
+
+  // Award a unique item (only once)
+  if (!gameState.inventory.includes("Dragon Slayer")) {
+    gameState.inventory.push("Dragon Slayer");
+    logCombat("You obtain the legendary 'Dragon Slayer' trophy!", "magic");
+  }
+
+  // Optionally: present final screen / unlock new area / stop normal play
+  setTimeout(() => {
+    document.getElementById("text").innerHTML = "<b>THE DRAGON IS DEAD.</b><br>Congratulations — you finished the core game!";
+    // disable buttons so player reads ending (re-enable with 'Back to Town' or reload)
+    document.querySelectorAll(".btn").forEach(b => b.disabled = true);
+  }, 400);
 }
 
 function defeat() {
