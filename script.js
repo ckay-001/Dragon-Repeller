@@ -28,12 +28,12 @@ const weapons = [
 ];
 
 const monsters = [
-  { name: "slime", level: 1, health: 20, xp: 15, gold: 8 },
-  { name: "goblin", level: 2, health: 35, xp: 25, gold: 15 },
-  { name: "orc", level: 4, health: 60, xp: 40, gold: 25 },
-  { name: "beast", level: 6, health: 90, xp: 60, gold: 40 },
-  { name: "wizard", level: 10, health: 150, xp: 100, gold: 75 },
-  { name: "dragon", level: 15, health: 300, xp: 200, gold: 150 },
+  { name: "slime", level: 1, health: 20, xp: 15, gold: 15 },
+  { name: "goblin", level: 2, health: 35, xp: 25, gold: 25 },
+  { name: "orc", level: 4, health: 60, xp: 40, gold: 30 },
+  { name: "beast", level: 6, health: 90, xp: 60, gold: 50 },
+  { name: "wizard", level: 10, health: 150, xp: 100, gold: 80 },
+  { name: "dragon", level: 15, health: 300, xp: 200, gold: 200 },
 ];
 
 const locations = [
@@ -102,9 +102,9 @@ function updateUI() {
     Math.min((gameState.totalXp / getXpNeeded()) * 100, 100) + "%";
 
   // Magic unlock
-  if (gameState.magicUnlocked) {
+  /*if (gameState.magicUnlocked) {
     document.getElementById("spellControls").style.display = "grid";
-  }
+  }*/
 }
 
 function logCombat(message, type) {
@@ -160,12 +160,17 @@ function update(location) {
     document.getElementById("button4").style.display = 'none';
   }
   
-  // Hide spell buttons when not in combat
-  if (location.name !== "fight") {
-    document.getElementById("spellControls").style.display = "none";
-  } else if (gameState.magicUnlocked) {
-    document.getElementById("spellControls").style.display = "grid";
+  // Hide or show spell buttons just like confirm/cancel
+  const spellControls = document.getElementById("spellControls");
+
+  if (location.name === "fight" && gameState.magicUnlocked) {
+    // Show only during combat AND after magic is unlocked
+    spellControls.style.display = "grid";
+  } else {
+    // Hide everywhere else
+    spellControls.style.display = "none";
   }
+
   
   // Set button text and functions
   for (let i = 0; i < location.buttonText.length; i++) {
