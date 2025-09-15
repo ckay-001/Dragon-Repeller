@@ -16,6 +16,12 @@ let gameState = {
   monsterDefeated: false,
   powerStrikeCooldown: 0,
   actionInProgress: false,
+  dragonPhase: 1,
+  dragonBaseHealth: null,   // stored when you start the dragon fight
+  wingBlastTurns: 0,        // how many turns player's accuracy is reduced
+  disarmedTurns: 0,         // how many turns player weapon is weakened
+  playerHitModifier: 0,     // applied to player's hit chance (can be negative)
+  dragonVulnerable: false,  // when true, player deals bonus physical damage
 };
 
 gameState.difficulty = "normal";
@@ -31,21 +37,12 @@ function getDifficultyMultiplier() {
   return difficultyMultipliers[gameState.difficulty] || 1;
 }
 
-// Call to set difficulty. You can replace this prompt with a UI control if you want.
-function chooseDifficultyPrompt() {
-  const choice = prompt("Choose difficulty: easy, normal, hard", gameState.difficulty || "normal");
-  const valid = ["easy", "normal", "hard"];
-  gameState.difficulty = valid.includes(choice) ? choice : "normal";
-  document.getElementById("text").innerHTML = `Difficulty set to: ${gameState.difficulty}`;
-}
-
 // Optional: nicer setter for UI buttons
 function setDifficulty(d) {
   const valid = ["easy", "normal", "hard"];
   gameState.difficulty = valid.includes(d) ? d : "normal";
   document.getElementById("text").innerHTML = `Difficulty set to: ${gameState.difficulty}`;
 }
-chooseDifficultyPrompt();
 
 // Game Data
 const weapons = [
@@ -107,31 +104,6 @@ const locations = [
     text: "Combat! Choose wisely.",
   },
 ];
-
-function chooseDifficulty() {
-  const choice = prompt("Choose difficulty: easy, normal, hard", "normal");
-  const validChoices = ["easy", "normal", "hard"];
-  gameState.difficulty = validChoices.includes(choice) ? choice : "normal";
-  document.getElementById("text").innerHTML =
-    `Difficulty set to: ${gameState.difficulty}`;
-}
-chooseDifficulty(); // Call when the game loads
-
-function scaleMonsterStats(monster) {
-  const multipliers = {
-    easy: 0.8,
-    normal: 1,
-    hard: 1.5
-  };
-  const m = multipliers[gameState.difficulty] || 1;
-
-  return {
-    ...monster,
-    health: Math.floor(monster.health * m),
-    xp: Math.floor(monster.xp * m),
-    gold: Math.floor(monster.gold * m)
-  };
-}
 
 // UI Functions
 function updateUI() {
@@ -243,51 +215,6 @@ function update(location) {
   updateUI();
 }
 
-/*function update(location) {
-
-  document.getElementById("monsterStats").style.display = "none";
-  
-  // Reset all buttons to default state
-  for (let i = 1; i <= 4; i++) {
-    const button = document.getElementById(`button${i}`);
-    if (button) {
-      button.style.display = 'block';
-      button.className = "btn btn-primary";
-      button.disabled = false; // NEW: Enable buttons by default
-    }
-  }
-  
-  // Hide the 4th button for town and fight locations
-  if (location.name === "town" || location.name === "fight") {
-    document.getElementById("button4").style.display = 'none';
-  }
-  
-  // NEW: Hide spell buttons when not in combat
-  if (location.name !== "fight") {
-    document.getElementById("spellControls").style.display = "none";
-  } else if (gameState.magicUnlocked) {
-    // Show spell buttons only during combat if magic is unlocked
-    document.getElementById("spellControls").style.display = "grid";
-  }
-  
-  // Set button text and functions
-  for (let i = 0; i < location.buttonText.length; i++) {
-    const button = document.getElementById(`button${i+1}`);
-    if (button) {
-      button.innerText = location.buttonText[i];
-      button.onclick = location.buttonFunctions[i];
-      
-      // Style the "Back to Town" button differently
-      if (location.buttonText[i] === "Back to Town") {
-        button.className = "btn btn-secondary";
-      }
-    }
-  }
-  
-  document.getElementById("text").innerHTML = location.text;
-  updateUI();
-}*/
-
 // Navigation
 function goTown() {
   update(locations[0]);
@@ -394,6 +321,16 @@ function fightMonster(index) {
   gameState.fighting = index;
   gameState.monsterHealth = scaled.health;
   gameState.monsterDefeated = false;
+  // If this is the dragon (index 5), initialize dragon-specific fields
+  if (index === 5) {
+    gameState.dragonPhase = 1;
+    gameState.dragonBaseHealth = scaled.health;
+    gameState.wingBlastTurns = 0;
+    gameState.disarmedTurns = 0;
+    gameState.playerHitModifier = 0;
+    gameState.dragonVulnerable = false;
+    logCombat("🐉 The dragon roars — this will be a tough fight!", "damage");
+  }
 
   // Update UI
   update(locations[4]);
@@ -425,42 +362,6 @@ function fightMonster(index) {
   updateCombat();
 }
 
-/*function fightMonster(index) {
-  document.getElementById("powerStrikeBtn").disabled = gameState.mana < 5;
-  gameState.fighting = index;
-  const monster = monsters[index];
-  gameState.monsterHealth = monster.health;
-  gameState.monsterDefeated = false;
-
-  update(locations[4]);
-
-  document.getElementById("monsterStats").style.display = "block";
-  document.getElementById("monsterName").innerText = monster.name.toUpperCase();
-  document.getElementById("monsterHealthText").innerText = monster.health;
-  document.getElementById("monsterMaxHealthText").innerText = monster.health;
-  document.getElementById("monsterLevel").innerText = monster.level;
-  document.getElementById("monsterHealthBar").style.width = "100%";
-
-  logCombat(`${monster.name} (Level ${monster.level}) appears!`);
-
-  disableCombatButtons(false);
-  enableSpellButtonsIfUnlocked();
-
-  // ✅ Disable Power Strike if on cooldown or lacking mana
-  document.getElementById("powerStrikeBtn").disabled =
-    gameState.powerStrikeCooldown > 0 || gameState.mana < 5;
-
-  // ✅ Hide or show spells based on unlock status
-  if (gameState.magicUnlocked) {
-    document.getElementById("spellControls").style.display = "block";
-    enableSpellButtonsIfUnlocked();
-  } else {
-    document.getElementById("spellControls").style.display = "none";
-  }
-  
-  updateCombat();
-}*/
-
 function attack() {
   if (gameState.actionInProgress) {
     return; // Prevent overlapping actions
@@ -473,7 +374,31 @@ function attack() {
   const weapon = weapons[gameState.currentWeapon];
 
   // --- Monster attacks first ---
-  let monsterDamage = getMonsterAttackValue(monster.level);
+  let monsterDamage = 0;
+
+  if (gameState.fighting === 5) {
+    // special dragon behavior
+    const info = dragonPreAttackInfo(); // {damage, effect}
+    monsterDamage = info.damage;
+
+    if (info.effect === 'breath') {
+      logCombat(`🔥 Dragon breathes! You take ${monsterDamage} damage.`, "damage");
+    } else if (info.effect === 'wing') {
+      // apply accuracy penalty for a few turns
+      gameState.playerHitModifier = (gameState.playerHitModifier || 0) - 0.15;
+      gameState.wingBlastTurns = 3;
+      logCombat(`🕊️ Wing blast! - Your accuracy reduced for ${gameState.wingBlastTurns} turns.`, "damage");
+    } else if (info.effect === 'tail') {
+      gameState.disarmedTurns = Math.max(gameState.disarmedTurns, 2);
+      logCombat(`👊 Tail sweep! Your weapon effectiveness is reduced for ${gameState.disarmedTurns} turns.`, "damage");
+    } else {
+      logCombat(`The ${monster.name} hits you for ${monsterDamage}!`, "damage");
+    }
+  } else {
+    monsterDamage = getMonsterAttackValue(monster.level);
+    if (monsterDamage > 0) logCombat(`The ${monster.name} hits you for ${monsterDamage}!`, "damage");
+    else logCombat(`The ${monster.name} misses!`, "miss");
+  }
 
   // Check shield
   if (gameState.shieldActive) {
@@ -481,7 +406,6 @@ function attack() {
     gameState.shieldActive = false; // consume shield
     logCombat("🛡️ Shield absorbs most of the damage!", "heal");
   }
-
   gameState.health -= monsterDamage;
 
   if (monsterDamage > 0) {
@@ -528,6 +452,7 @@ function attack() {
 
   setTimeout(() => {
     gameState.actionInProgress = false;
+    tickStatusEffects();
     if (gameState.health > 0 && gameState.monsterHealth > 0) {
       disableCombatButtons(false);
     }
@@ -572,7 +497,7 @@ function powerStrike() {
   if (monsterDamage > 0) {
     logCombat(`${monster.name} counters for ${monsterDamage}!`, "damage");
   }
-
+  tickStatusEffects();
   // Update UI and combat
   updateCombat();
 }
@@ -583,6 +508,65 @@ function monsterAttack() {
   gameState.health -= damage;
   logCombat(`${monster.name} attacks for ${damage} damage!`, "damage");
   updateCombat();
+}
+
+function dragonPreAttackInfo() {
+  // returns an object { damage, effect } where effect can be 'breath','wing','tail',null
+  const phase = gameState.dragonPhase || 1;
+  // tuning table per phase (feel free to tweak)
+  const table = {
+    1: { breathChance: 0.10, wingChance: 0.05, tailChance: 0.03, dmgMul: 1.0, breathPercent: 0.08 },
+    2: { breathChance: 0.18, wingChance: 0.09, tailChance: 0.06, dmgMul: 1.15, breathPercent: 0.12 },
+    3: { breathChance: 0.28, wingChance: 0.14, tailChance: 0.10, dmgMul: 1.35, breathPercent: 0.18 },
+    4: { breathChance: 0.40, wingChance: 0.22, tailChance: 0.18, dmgMul: 1.6,  breathPercent: 0.25 }
+  }[phase];
+
+  const monster = monsters[gameState.fighting];
+  const rand = Math.random();
+  let damage = 0;
+  let effect = null;
+
+  // BREATH: percent of player's max health
+  if (rand < table.breathChance) {
+    damage = Math.max(1, Math.floor(gameState.maxHealth * table.breathPercent));
+    effect = 'breath';
+    return { damage, effect, phase };
+  }
+
+  // WING BLAST: small damage + accuracy penalty
+  if (rand < table.breathChance + table.wingChance) {
+    damage = Math.max(1, Math.floor(getMonsterAttackValue(monster.level) * table.dmgMul));
+    effect = 'wing';
+    return { damage, effect, phase };
+  }
+
+  // TAIL SWEEP: small damage + temporary weapon weakening
+  if (rand < table.breathChance + table.wingChance + table.tailChance) {
+    damage = Math.max(1, Math.floor(getMonsterAttackValue(monster.level) * 0.9 * table.dmgMul));
+    effect = 'tail';
+    return { damage, effect, phase };
+  }
+
+  // Normal bite (scaled by phase damage multiplier)
+  damage = Math.max(0, Math.floor(getMonsterAttackValue(monster.level) * table.dmgMul));
+  return { damage, effect: null, phase };
+}
+
+function tickStatusEffects() {
+  if (gameState.wingBlastTurns > 0) {
+    gameState.wingBlastTurns--;
+    if (gameState.wingBlastTurns === 0) {
+      gameState.playerHitModifier = 0;
+      logCombat("✅ Your accuracy returns to normal.", "heal");
+    }
+  }
+
+  if (gameState.disarmedTurns > 0) {
+    gameState.disarmedTurns--;
+    if (gameState.disarmedTurns === 0) {
+      logCombat("✅ You recover your weapon fully.", "heal");
+    }
+  }
 }
 
 // Returns integer damage a monster deals based on its level and player level.
@@ -596,12 +580,33 @@ function getMonsterAttackValue(level) {
   return hit > 0 ? hit : 0;
 }
 
-/*function getMonsterAttackValue(level) {
-  const baseAttack = level * 5;  // baseline damage per monster level
-  const playerReduction = Math.floor(Math.random() * gameState.level); // randomness based on player level
-  const hit = baseAttack - playerReduction;
-  return hit > 0 ? hit : 0; // never negative
-}*/
+function checkDragonPhase() {
+  if (gameState.fighting !== 5) return; // only for dragon
+
+  const base = gameState.dragonBaseHealth || monsters[5].health;
+  const current = Math.max(0, gameState.monsterHealth);
+  const ratio = current / base;
+  let newPhase = gameState.dragonPhase;
+
+  if (ratio > 0.75) newPhase = 1;
+  else if (ratio > 0.50) newPhase = 2;
+  else if (ratio > 0.25) newPhase = 3;
+  else newPhase = 4;
+
+  if (newPhase !== gameState.dragonPhase) {
+    gameState.dragonPhase = newPhase;
+    logCombat(`🐉 Dragon shifts into Phase ${newPhase}!`, "damage");
+
+    // example phase effects:
+    if (newPhase >= 3 && !gameState.dragonVulnerable) {
+      gameState.dragonVulnerable = true; // armor cracked -> takes extra physical dmg
+      logCombat("⚠️ The dragon's armor cracks! Physical attacks deal more damage.", "heal");
+    }
+    if (newPhase === 4) {
+      logCombat("🔥 The dragon is enraged! Its attacks are stronger!", "damage");
+    }
+  }
+}
 
 // Returns true if player's attack hits. 80% base hit chance,
 // but guarantees hits when player is in danger (low health).
@@ -644,6 +649,7 @@ function defend() {
     gameState.actionInProgress = false;
     if (gameState.health > 0 && gameState.monsterHealth > 0) {
       disableCombatButtons(false);
+      tickStatusEffects();
     }
   }, 800);
 }
@@ -669,6 +675,9 @@ function flee() {
 }
 
 function updateCombat() {
+  if (gameState.fighting === 5) {
+    checkDragonPhase();
+  }
   const monster = gameState.currentEnemy || monsters[gameState.fighting] || {health:1};
   document.getElementById("healthText").innerText = Math.max(0, gameState.health);
   document.getElementById("healthBar").style.width =
@@ -688,33 +697,6 @@ function updateCombat() {
     victory();
   }
 }
-
-/*function updateCombat() {
-  const monster = monsters[gameState.fighting];
-  document.getElementById("healthText").innerText = Math.max(
-    0,
-    gameState.health
-  );
-  document.getElementById("healthBar").style.width =
-    Math.max(0, gameState.health / gameState.maxHealth) * 100 + "%";
-  document.getElementById("monsterHealthText").innerText = Math.max(
-    0,
-    gameState.monsterHealth
-  );
-  document.getElementById("monsterHealthBar").style.width =
-    Math.max(0, gameState.monsterHealth / monster.health) * 100 + "%";
-  document.getElementById("manaText").innerText = gameState.mana;
-  document.getElementById("manaBar").style.width =
-    (gameState.mana / gameState.maxMana) * 100 + "%";
-
-  if (gameState.health <= 0) {
-    defeat();
-  } else if (gameState.monsterHealth <= 0 && !gameState.monsterDefeated) {
-    // NEW: Only process victory if monster wasn't already defeated
-    gameState.monsterDefeated = true;
-    victory();
-  }
-}*/
 
 function disableCombatButtons(disabled) {
   const combatButtons = document.querySelectorAll('.combat-btn');
@@ -765,25 +747,6 @@ function victory() {
     goTown();
   }, 2000);
 }
-
-/*function victory() {
-  gameState.powerStrikeCooldown = 0; // ✅ reset
-  disableCombatButtons(true);
-  document.getElementById("spellControls").style.display = "none";
-  const monster = monsters[gameState.fighting];
-  gameState.gold += monster.gold;
-  gameState.totalXp += monster.xp;
-  logCombat(`Victory! +${monster.xp} XP, +${monster.gold} gold!`, "heal");
-  checkLevelUp();
-
-  disableCombatButtons(true);
-  document.querySelectorAll(".spell-btn").forEach(btn => btn.disabled = true); // NEW
-
-  setTimeout(() => {
-    gameState.monsterDefeated = false;
-    goTown();
-  }, 2000);
-}*/
 
 function handleDragonVictory() {
   // example: give a special item, show a final message, unlock NG+ etc.
@@ -889,7 +852,11 @@ function castSpell(spell) {
   switch (spell) {
     case "heal":
       cost = 10;
-      if (gameState.mana < cost) break;
+      if (gameState.mana < cost) {
+        logCombat("❌ Not enough mana!", "damage");
+        disableCombatButtons(false);
+        return;
+      }
 
       gameState.mana -= cost;
       const healAmount = Math.min(
@@ -952,21 +919,23 @@ function castSpell(spell) {
     if (gameState.health > 0 && gameState.monsterHealth > 0) {
       // Still fighting → re-enable
       disableCombatButtons(false);
+      tickStatusEffects();
     } else {
       // Combat ended → make sure buttons are reset properly
-      disableCombatButtons(true);
+      disableCombatButtons(true);   
       updateUI(); // refreshes so the main town/cave buttons appear
     }
- }, 800);
+  }, 800);
   
   if (gameState.powerStrikeCooldown > 0) {
     gameState.powerStrikeCooldown--;
   }
   document.getElementById("powerStrikeBtn").disabled =
     gameState.powerStrikeCooldown > 0 || gameState.mana < 5;
-
+ 
+  updateCombat();
+  disableCombatButtons(false);
 }
-
 
 // Save/Load
 function saveGame() {
